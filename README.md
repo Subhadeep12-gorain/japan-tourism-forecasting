@@ -16,7 +16,7 @@ This project compares classical time-series models with nonlinear machine learni
 - **CatBoost** (comparison model) — alternative gradient boosting framework
 - **SARIMA** (baseline) — classical seasonal autoregressive model
 
-Note: SARIMA serves as a classical baseline trained on pooled data; XGBoost and CatBoost use a pooled cross-prefecture approach that outperforms individually trained models.
+Note: SARIMA is trained on national-level aggregated data, while XGBoost and CatBoost operate on pooled prefecture-level data. This makes the comparison conservative — SARIMA has an easier modeling task yet still underperforms significantly.
 
 ## ⚙️ Features
 
