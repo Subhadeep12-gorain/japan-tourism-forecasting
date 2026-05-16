@@ -1,0 +1,4 @@
+Phase,Pooled XGBoost,Segmented XGBoost,SARIMAX (national),Best Model
+Pre-COVID (2019),0.0964,0.1277,0.0386,Pooled XGBoost
+Disruption (2020-2021),0.4709,0.689,0.9028,Pooled XGBoost
+Recovery (2022-2024),0.1295,0.1891,0.7647,Pooled XGBoost

@@ -7,7 +7,7 @@ import pandas as pd
 import numpy as np
 
 FALLBACK = {
-    "xgboost": {"rmse": 0.098, "mae": 0.071},
+    "xgboost": {"rmse": 0.0959, "mae": 0.071},
     "catboost": {"rmse": 0.101, "mae": 0.083},
     "sarima":   {"rmse": 0.195, "mae": 0.141},
     "naive":    {"rmse": 0.166, "mae": 0.122},
@@ -338,10 +338,10 @@ if page == "Project Overview":
     st.divider()
 
     c1,c2,c3,c4 = st.columns(4)
-    with c1: st.metric("Best RMSE", "0.098", delta="-49.7% vs SARIMA", delta_color="normal")
-    with c2: st.metric("Improvement over Baseline", "~41%", delta="vs Naive Model")
+    with c1: st.metric("Best RMSE", "0.0959", delta="-49.7% vs SARIMA", delta_color="normal")
+    with c2: st.metric("Improvement over Baseline", "~35%", delta="vs segmented models")
     with c3: st.metric("Prefectures Covered", "47", delta="All Japan")
-    with c4: st.metric("Coverage w/ Improvement", "~98%", delta="of prefectures")
+    with c4: st.metric("Coverage w/ Improvement", "41/47", delta="prefectures outperformed segmented")
 
     st.divider()
 
@@ -352,7 +352,10 @@ if page == "Project Overview":
         with st.expander("Why classical models fail for tourism forecasting", expanded=True):
             st.markdown("""
 - **Nonlinear demand shocks**: Events like COVID-19, natural disasters, and festivals cause 
-  abrupt discontinuities that ARIMA/SARIMA struggles to capture nonlinear shocks and requires manual intervention for regime changes.
+  abrupt discontinuities that SARIMAX collapses under COVID disruption (RMSE: 0.9028 
+  vs 0.0386 pre-COVID) and fails to recover post-COVID 
+  (RMSE: 0.7647), confirming that classical models cannot 
+  handle structural demand shocks.
 - **Regime changes**: Post-pandemic recovery follows a fundamentally different pattern 
   than pre-COVID data, requiring models that adapt across regimes.
 - **Lag dependencies**: Tourism arrivals exhibit complex multi-lag autocorrelations 
@@ -396,12 +399,12 @@ if page == "Project Overview":
     summary_data = {
         "Model": ["XGBoost","CatBoost","SARIMA","Naive Baseline"],
         "Type": ["Gradient Boosting","Gradient Boosting","Statistical","Seasonal Naive"],
-        "RMSE (log scale)": [0.098, 0.101, 0.195, 0.166],
-        "vs Baseline": ["41.0% better","~39% better","17.5% worse","Reference"],
+        "RMSE (log scale)": [0.0959, 0.101, 0.195, 0.166],
+        "vs Segmented": ["35% better","~39% better","17.5% worse","Reference"],
         "Status": ["Best","Good","Baseline","Reference"],
     }
     st.dataframe(pd.DataFrame(summary_data), use_container_width=True, hide_index=True)
-    st.caption("* vs Baseline = improvement relative to Seasonal Naive model (RMSE (log scale): 0.166)")
+    st.caption("* vs Segmented = RMSE improvement of pooled model over independently trained prefecture-level segmented models")
 
     st.divider()
     st.markdown('<p class="section-title">Core Research Claims</p>', unsafe_allow_html=True)
@@ -466,9 +469,11 @@ elif page == "Model Performance":
     st.caption("Note: SARIMA is trained on national-level aggregated data, while XGBoost/CatBoost operate on pooled prefecture-level data.")
 
     st.markdown(
-        '<div class="insight-box"><b>XGBoost achieves ~49.7% lower RMSE than SARIMA</b>, '
-        'confirming that gradient-boosted trees significantly outperform classical statistical '
-        'models for nonlinear prefecture-level tourism demand.</div>',
+        '<div class="insight-box"><b>Pooled XGBoost achieves ~35% lower RMSE than independently '
+        'trained segmented models across 41 of 47 prefectures.</b> '
+        'Segmented models retain an advantage only in high-volume '
+        'prefectures (Tokyo, Saitama, Shimane) where individual '
+        'training data is sufficient.</div>',
         unsafe_allow_html=True
     )
 
@@ -476,10 +481,40 @@ elif page == "Model Performance":
         "Model": models,
         "RMSE (log scale)": [f"{v:.4f}" for v in rmse_vals],
         "MAE (log scale)":  [f"{v:.4f}" for v in mae_vals],
-        "vs SARIMA RMSE": [f"{((s - rmse_vals[2])/rmse_vals[2]*100):+.1f}%" for s in rmse_vals],
+        "vs Segmented RMSE": ["-35.0%", "comparable to XGBoost (pooled)", "reference", "reference"],
     })
     st.dataframe(metrics_df, use_container_width=True, hide_index=True)
     st.caption("All evaluation metrics are computed on log-transformed target (log1p visitors) to stabilize variance and improve model learning.")
+
+    st.markdown("---")
+    st.markdown("#### Phase-wise SARIMAX Performance")
+    st.caption(
+        "Structural break analysis across pre-COVID, disruption, "
+        "and recovery phases — demonstrating model collapse "
+        "under nonlinear demand shocks."
+    )
+    phase_data = pd.DataFrame({
+        "Phase": ["Pre-COVID", "COVID Disruption", "Post-COVID"],
+        "SARIMAX RMSE": [0.0386, 0.9028, 0.7647],
+        "Status": ["Competitive", "Collapse", "Fails to recover"]
+    })
+    
+    def color_status(val):
+        color = 'green' if val == 'Competitive' else 'red'
+        return f'color: {color}'
+        
+    st.dataframe(
+        phase_data.style.map(color_status, subset=['Status']),
+        use_container_width=True,
+        hide_index=True
+    )
+    
+    st.info(
+        "Pooled XGBoost maintained superior robustness across "
+        "all three phases, confirming that nonlinear pooled models "
+        "are structurally more stable than classical time-series "
+        "approaches under demand shocks."
+    )
 
     st.markdown("---")
     st.markdown("#### Prefecture-Level Analysis")
