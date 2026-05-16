@@ -1,22 +1,22 @@
 # 🇯🇵 Japan Tourism Demand Forecasting
 
-Climate-adjusted tourism demand forecasting across all 47 Japanese prefectures (2016–2024) using nonlinear machine learning models.
+Climate-adjusted tourism demand forecasting across all 47 Japanese prefectures (2016–2024) using nonlinear machine learning models. Tourism demand is measured as total overnight guests across accommodation facilities.
 
 ## 📊 Key Results
 
-- XGBoost RMSE: 0.098 (log scale) — ~50% lower than SARIMA baseline
-- Baseline improvement: ~41% over seasonal naive model
-- Coverage: ~98% of prefectures show improved predictions
+- Pooled XGBoost RMSE: 0.0959 (log scale) — ~35% lower than independently trained segmented models
+- Pooled model outperforms segmented models in 41 out of 47 prefectures
+- SARIMAX collapses under COVID disruption (RMSE: 0.9028 vs 0.0386 pre-COVID)
 
 ## 🧠 Modeling Approach
 
 This project compares classical time-series models with nonlinear machine learning approaches:
 
-- **XGBoost** (primary model) — captures nonlinear interactions and pooled regional patterns
-- **CatBoost** (comparison model) — alternative gradient boosting framework
-- **SARIMA** (baseline) — classical seasonal autoregressive model
+- **XGBoost** (primary model) — pooled cross-prefecture training with climate-adjusted features
+- **CatBoost** (comparison model) — pooled setup, confirms generalization advantage is model-agnostic
+- **SARIMAX** (baseline) — trained on national-level aggregated data
 
-Note: SARIMA serves as a classical baseline trained on pooled data; XGBoost and CatBoost use a pooled cross-prefecture approach that outperforms individually trained models.
+Note: SARIMAX is trained on national-level aggregated data, while XGBoost and CatBoost operate on pooled prefecture-level data. This makes the comparison conservative — SARIMAX has an easier modeling task yet still underperforms significantly, especially under structural demand shocks.
 
 ## ⚙️ Features
 
@@ -33,13 +33,22 @@ Tourism demand is not purely seasonal — it exhibits:
 - Climate-sensitive deviations
 - Nonlinear and interaction-driven dynamics
 
-This explains why nonlinear boosting models significantly outperform classical time-series approaches.
+SARIMAX phase-wise performance confirms classical model limitations:
+
+| Phase | SARIMAX RMSE | Status |
+|---|---|---|
+| Pre-COVID | 0.0386 | Competitive |
+| COVID Disruption | 0.9028 | Collapse |
+| Post-COVID | 0.7647 | Fails to recover |
+
+Pooled XGBoost maintained robustness across all three phases.
 
 ## 🖥️ Interactive Dashboard
 
 An interactive Streamlit dashboard is included:
 
-- Model performance comparison (XGBoost vs CatBoost vs SARIMA)
+- Pooled vs segmented model performance comparison
+- Phase-wise SARIMAX structural break analysis
 - Feature importance and category breakdown
 - Peak month classification insights
 - Pipeline and reproducibility overview
@@ -55,13 +64,17 @@ streamlit run app.py
 
 This project was developed as part of a MEXT 2027 scholarship research preparation.
 
+Research Question: *Does pooled, climate-adjusted machine learning forecasting outperform prefecture-level segmented models for Japanese tourism demand, and how robust is this advantage across seasonal patterns and post-COVID structural changes?*
+
 Research Direction:
-- Nonlinear vs classical model comparison
-- Climate-adjusted tourism forecasting
-- Spatio-temporal pooled learning vs aggregated modeling
+- Pooled vs segmented cross-prefecture forecasting
+- Climate-adjusted tourism demand modeling
+- Structural break analysis across pre-COVID, disruption, and recovery phases
+- Congestion-risk detection as applied policy extension
 
 ## 🚀 Future Work
 
-- Prefecture-level SARIMAX / hierarchical models
+- Deeper analysis of prefecture-level heterogeneity in pooled vs segmented performance
+- Congestion-risk detection framework built on forecast outputs
+- Demand redistribution simulation for proactive regional tourism management
 - Uncertainty-aware forecasting
-- Congestion-risk and overtourism modeling
